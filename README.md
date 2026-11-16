@@ -1,5 +1,7 @@
 # DSP scratchpad
 
+[![Tests](https://github.com/christian-gw/signal-analyzer/actions/workflows/tests.yml/badge.svg)](https://github.com/christian-gw/signal-analyzer/actions/workflows/tests.yml)
+
 A small, script-oriented NumPy/SciPy toolkit for exploratory vibration, temporal-frequency, order, spatial, and envelope analysis. A pandas DataFrame adapter is included for simple shared-grid data; file-format loaders and application-specific readers remain outside the package.
 
 ## Project status and scope

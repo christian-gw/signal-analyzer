@@ -41,5 +41,9 @@ examples = [
     "nbformat",
 ]
 
+[project.urls]
+Repository = "https://github.com/christian-gw/signal-analyzer"
+Issues = "https://github.com/christian-gw/signal-analyzer/issues"
+
 [tool.setuptools.packages.find]
 where = ["src"]
