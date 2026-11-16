@@ -158,7 +158,11 @@ def averaged_psd(x, block_size, overlap=0.5,
         Frequency coordinates and arithmetic mean of block PSD densities.
     block_centers, Pxx_blocks : ndarray, optional
         Block-center coordinates and PSD densities with shape
-        ``(number_of_blocks, number_of_bins)``.
+        ``(number_of_blocks, number_of_bins)``. Centers are relative to the
+        first input sample, which is coordinate zero for this array API. A
+        caller with a nonzero absolute origin must add that origin explicitly.
+        Each center is the midpoint of the block's first and last samples:
+        ``(start + (block_size - 1) / 2) / fs``.
 
     Notes
     -----
@@ -222,7 +226,10 @@ def averaged_fft(x, block_size, overlap=0.5,
     block_centers, S : ndarray, optional
         Block-center coordinates and magnitude spectra (blocks x bins).
         Centers are in time units for temporal input or position units for
-        spatial input.
+        spatial input. They are relative to the first input sample, which is
+        coordinate zero for this array API; add any nonzero absolute origin in
+        caller code. Each center is the midpoint of the block's first and last
+        samples: ``(start + (block_size - 1) / 2) / fs``.
 
     Example
     -------

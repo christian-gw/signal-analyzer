@@ -82,9 +82,12 @@ def max_speed_aa_filter(x, speed, fs, resolution=100, order=8):
 def speed_resample(x, speed, fs, resolution=100):
     """Resample x onto equidistant position coordinates.
 
-    x and speed must be synchronous 1D signals sampled at fs.
-    Speed may be rev/s, m/s, etc.; resolution is samples per
-    corresponding integrated speed unit (rev, m, etc.).
+    x and speed must be synchronous 1D signals sampled at fs. ``fs`` is
+    samples per time unit, and speed must use the same time unit in its
+    denominator. For example, ``fs`` in samples/s pairs with speed in rev/s,
+    not rpm. Speed may otherwise represent rev/time, length/time, etc.;
+    resolution is samples per corresponding integrated unit (rev, length,
+    etc.). Units are not parsed or converted automatically.
 
     Trapezoidal integration estimates position; np.interp performs
     linear interpolation. Requires at least two finite samples and
@@ -153,5 +156,7 @@ def speed_resample_aa(x, speed, fs, resolution=100, oversample=4,
     pos, y = speed_resample(
         x_filtered, speed, fs, resolution=resolution * oversample
     )
+    if len(y) == 1:
+        return pos.copy(), y.copy()
     y = resample_poly(y, up=1, down=oversample, padtype="line")
     return pos[::oversample], y

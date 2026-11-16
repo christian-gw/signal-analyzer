@@ -154,6 +154,19 @@ def test_resamplers_handle_a_short_valid_input_consistently():
     assert aa_y.shape == expected_pos.shape
 
 
+def test_aa_wrapper_keeps_single_spatial_sample_finite():
+    x = np.array([3.0, 3.0])
+    speed = np.array([1.0, 1.0])
+
+    pos, y = speed_resample_aa(
+        x, speed, fs=10.0, resolution=2, oversample=4
+    )
+
+    np.testing.assert_array_equal(pos, [0.0])
+    np.testing.assert_allclose(y, [3.0], rtol=0, atol=1e-14)
+    assert np.all(np.isfinite(y))
+
+
 @pytest.mark.parametrize("bad_speed", [
     np.array([1.0, 0.0, 1.0]),
     np.array([1.0, -0.1, 1.0]),

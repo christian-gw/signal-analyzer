@@ -34,7 +34,8 @@ class Signal:
 
     Exactly one of ``sample_rate`` or ``coordinate`` must be supplied. Uniform
     signals use ``start + arange(N) / sample_rate``; explicit coordinates may
-    be nonuniform but must be finite and strictly increasing.
+    be nonuniform but must be finite and strictly increasing. Input arrays are
+    copied and the stored arrays are read-only.
     """
 
     values: np.ndarray
@@ -71,6 +72,10 @@ class Signal:
                 raise ValueError("coordinate and values must have equal length")
             if coordinate.size > 1 and np.any(np.diff(coordinate) <= 0):
                 raise ValueError("coordinate must be strictly increasing")
+
+        values.setflags(write=False)
+        if coordinate is not None:
+            coordinate.setflags(write=False)
 
         object.__setattr__(self, "values", values)
         object.__setattr__(self, "sample_rate", sample_rate)
@@ -219,39 +224,37 @@ class Measurement:
     def add_derived_signal(
         self, name, signal, operation, inputs, parameters=None
     ):
-        """Add a derived signal and append its operation record."""
+        """Atomically add a derived signal and its operation record."""
         inputs = tuple(inputs)
         missing = [input_name for input_name in inputs if input_name not in self.signals]
         if missing:
             raise ValueError(f"unknown input signals: {missing}")
-        self.add_signal(name, signal)
-        self.provenance.append(
-            OperationRecord(
-                operation=operation,
-                inputs=inputs,
-                output=name,
-                parameters={} if parameters is None else parameters,
-            )
+        record = OperationRecord(
+            operation=operation,
+            inputs=inputs,
+            output=name,
+            parameters={} if parameters is None else parameters,
         )
+        self.add_signal(name, signal)
+        self.provenance.append(record)
         return signal
 
     def add_derived_result(
         self, name, result, operation, inputs, parameters=None
     ):
-        """Add a derived scalar result and append its operation record."""
+        """Atomically add a derived scalar result and its operation record."""
         inputs = tuple(inputs)
         missing = [input_name for input_name in inputs if not self._name_exists(input_name)]
         if missing:
             raise ValueError(f"unknown inputs: {missing}")
-        self.add_result(name, result)
-        self.provenance.append(
-            OperationRecord(
-                operation=operation,
-                inputs=inputs,
-                output=name,
-                parameters={} if parameters is None else parameters,
-            )
+        record = OperationRecord(
+            operation=operation,
+            inputs=inputs,
+            output=name,
+            parameters={} if parameters is None else parameters,
         )
+        self.add_result(name, result)
+        self.provenance.append(record)
         return result
 
     def signal(self, name):

@@ -12,6 +12,7 @@ This repository contains small, generic DSP building blocks, an in-memory measur
 - Coherent-gain correction divides by the window sum and estimates bin-centered sinusoidal amplitude. This is amplitude normalization, not PSD normalization.
 - `averaged_fft` computes a mean magnitude spectrum, not a mean complex FFT or power spectrum. Incomplete trailing blocks are omitted.
 - The integer hop is `int(block_size * (1 - overlap))`. A non-integer hop is floored, so effective overlap `1 - step / block_size` can be slightly larger than requested.
+- Spectrogram block centers returned by `averaged_fft` and `averaged_psd` are relative to the first supplied sample, treated as coordinate zero. They use the midpoint of the first and last block samples; callers add any absolute time or position origin themselves.
 - Use `x` for the input signal and `Xf` for Fourier coefficients; do not overwrite the original signal during processing loops.
 - `psd_spectrum` uses SciPy periodogram density normalization. `averaged_psd` averages block power densities with the same floored-hop convention as `averaged_fft`.
 - PSD detrending is disabled by default so DC is preserved unless the caller explicitly requests detrending.
@@ -35,7 +36,7 @@ This repository contains small, generic DSP building blocks, an in-memory measur
 ### Speed-to-position resampling
 
 - `speed_resample` requires synchronous, finite 1D signal and speed arrays, at least two samples, positive sampling rate and resolution, and strictly positive speed.
-- Speed is integrated by the trapezoidal rule. Its unit may be revolutions/time, length/time, or another positive rate; resolution is samples per corresponding integrated unit.
+- Speed is integrated by the trapezoidal rule. Its denominator must use the same time unit as the sampling rate: samples/s pairs with rev/s or m/s, while rpm requires caller-side conversion. Units are not parsed or converted. Resolution is samples per corresponding integrated unit.
 - Output coordinates use a deterministic half-open grid: `0 <= pos < integrated final position`. Values within machine-precision tolerance of an exact grid count are snapped to prevent a spurious endpoint sample.
 - `max_speed_aa_filter` defaults to an eighth-order zero-phase temporal Butterworth cutoff at `max(speed) * resolution / 2`. Filtering is skipped when that cutoff reaches acquisition Nyquist.
 - `speed_resample_aa` applies the max-speed temporal filter, interpolates to a finer spatial grid, and uses FIR/polyphase decimation. This is partial protection, not rigorous anti-aliased nonuniform reconstruction.
@@ -49,7 +50,7 @@ This repository contains small, generic DSP building blocks, an in-memory measur
 
 ### Measurement and analysis composition
 
-- `Signal` stores finite 1D values on either a uniform grid (`sample_rate` and `start`) or an explicit strictly increasing coordinate. Signals in one `Measurement` keep independent time bases. `None` denotes an unknown unit and `"1"` an explicitly dimensionless unit.
+- `Signal` copies finite 1D values and explicit coordinates, stores those arrays read-only, and uses either a uniform grid (`sample_rate` and `start`) or an explicit strictly increasing coordinate. Signals in one `Measurement` keep independent time bases. `None` denotes an unknown unit and `"1"` an explicitly dimensionless unit.
 - `AnalysisResult` stores named scalar values with an exactly matching per-value unit map. NaN is allowed for meaningful undefined statistics; infinities are rejected.
 - `Measurement` is an unnamed in-memory container for original and derived signals, named scalar results, metadata, and plain `OperationRecord` provenance. Signal and result names share one namespace. File, job, GUI, and persistence identity remain external.
 - `Analysis` composes the standalone functions with defaults for spatial resolution and oversampling. The documented `resolution / 2.56` practical working boundary remains a user-side sizing heuristic rather than an API property. `Analysis` adds derived signals and provenance rather than reimplementing numerical algorithms.
@@ -57,6 +58,7 @@ This repository contains small, generic DSP building blocks, an in-memory measur
 - Generated amplitude and PSD spectra carry explicit kind, normalization, and aggregation metadata. Operations that require ordinary signals reject stored spectra.
 - Full and averaged amplitude spectra use coherent-gain normalization; their aggregation is respectively `none` or `mean_magnitude`. Full and averaged PSDs use density normalization; their aggregation is respectively `none` or `mean_power_density`.
 - `Analysis.align_pair` performs explicit overlap-only linear interpolation and retains both aligned outputs. Other paired operations still require matching grids and coordinate-unit labels and never align implicitly.
+- Derived signal registration validates its `OperationRecord` before mutating the measurement. Derived signals copy source metadata; operation-specific metadata overrides conflicting source fields.
 - Unit strings are propagated and compared but are not inferred, parsed, or converted dimensionally. Derived units remain unknown when a required input unit is unknown.
 - The envelope-order happy path retains demodulated, trimmed, spatial, and spectral intermediate signals for diagnosis.
 
@@ -68,7 +70,7 @@ This repository contains small, generic DSP building blocks, an in-memory measur
 - `synthesize_tone_mix` creates additive cosine components on temporal-frequency and integrated-position/order coordinates. Speed may be scalar, an array, or a callable; seeded Gaussian noise is deterministic.
 - `simulate_bearing_fault` combines smooth variable speed, shaft orders 1–5, fixed temporal tones, and fault-order impacts exciting a decaying resonance. It is qualitative and generic, not a calibrated machine model.
 - Both generators return synchronous NumPy arrays `(t, speed, position, x)`.
-- `find_files` uses `Path.rglob`, returns `Path` objects, and sorts case-insensitively by filename rather than full path.
+- `find_files` uses `Path.rglob`, returns `Path` objects, and sorts case-insensitively by filename, with full path as the deterministic tie-breaker for duplicate filenames.
 
 ## Synthetic anti-aliasing study
 

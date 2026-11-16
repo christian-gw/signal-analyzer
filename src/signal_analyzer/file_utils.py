@@ -6,8 +6,9 @@ from pathlib import Path
 def find_files(folder, pattern="*"):
     """Return matching files recursively, sorted by filename (case-insensitive).
 
-    Returns a list of pathlib.Path objects. Sort key is p.name.lower(),
-    not the full path. Files with identical names retain discovery order.
+    Returns a list of pathlib.Path objects. Filename is the primary sort key;
+    identical case-insensitive filenames are ordered by full path so results do
+    not depend on filesystem discovery order.
 
     Example
     -------
@@ -15,5 +16,9 @@ def find_files(folder, pattern="*"):
     """
     return sorted(
         (p for p in Path(folder).rglob(pattern) if p.is_file()),
-        key=lambda p: p.name.lower(),
+        key=lambda p: (
+            p.name.casefold(),
+            p.as_posix().casefold(),
+            p.as_posix(),
+        ),
     )

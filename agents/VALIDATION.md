@@ -13,7 +13,7 @@ Use deterministic synthetic signals and explicit tolerances. Prefer pure NumPy/S
 ## Averaged FFT
 
 - Repeated identical blocks give the same mean magnitude as an individual block (when aligned with the selected window).
-- Compare `return_spectrogram=False` vs `True`: frequencies and averages agree; `S.shape == (number_of_blocks, number_of_bins)` and `avg == S.mean(axis=0)`.
+- Compare `return_spectrogram=False` vs `True`: frequencies and averages agree; `S.shape == (number_of_blocks, number_of_bins)` and `avg == S.mean(axis=0)`. Block centers are relative to the first supplied sample and use the midpoint of the first and last samples in each block.
 - Confirm correct behavior for overlap 0 and 0.5; incomplete last block omitted.
 - For odd block sizes, confirm the sample hop is floored and returned block centers reflect the resulting effective overlap.
 - Never overwrite time-domain `x` with FFT `Xf` during block iteration.
@@ -52,6 +52,7 @@ Use deterministic synthetic signals and explicit tolerances. Prefer pure NumPy/S
 - Variable positive speed: use analytically integrable speed where practical; compare integrated position and known constant-order sinusoid.
 - A signal with known spatial order stays at that order through run-up/run-down (away from near-zero speed).
 - Confirm output length and position coordinates from the AA wrapper and direct resampler, including a short input.
+- A record whose oversampled spatial grid contains only one sample must return that finite sample without sending it through line-padded polyphase decimation.
 - Exact integrated grid boundaries are excluded consistently even when floating-point accumulation lands slightly above them; a genuine non-grid remainder retains its final valid grid point.
 - Negative/zero speed not supported by current algorithm: don't invent position by clipping/flooring speed.
 
@@ -78,6 +79,7 @@ The reproducible comparison is `python -m examples.spatial_antialiasing_study`. 
 
 - Search nested directories for a specified extension.
 - Verify alphabetical, case-insensitive sort by **filename**, not full path.
+- Duplicate case-insensitive filenames use full path as a deterministic tie-breaker rather than filesystem discovery order.
 - Confirm return type is `Path`.
 
 ## DataFrame adapter
@@ -90,12 +92,13 @@ The reproducible comparison is `python -m examples.spatial_antialiasing_study`. 
 
 - Preserve independent signal time/coordinate grids in one measurement.
 - Paired numerical operations must reject unequal lengths, rates, starts, or coordinates rather than aligning silently; only `align_pair` may align explicitly.
-- Derived signals append operation, input, output, and parameter provenance; duplicate names and unknown inputs are rejected.
+- Derived signals append operation, input, output, and parameter provenance; duplicate names and unknown inputs are rejected. Record validation must complete before either a signal or result is registered.
 - `AnalysisResult` accepts finite real scalars plus meaningful NaN values, rejects infinity, and requires a unit entry for every value. `None` means unknown and `"1"` means dimensionless.
 - Signal and result names share one namespace. Stored results append ordinary provenance, while unnamed results remain structured but ephemeral.
-- `Measurement` has no source or batch identifier, preserves uninterpreted metadata, and separate instances share no mutable state.
+- `Measurement` has no source or batch identifier, preserves uninterpreted metadata, and separate instances share no mutable state. `Signal` owns copied, read-only value and explicit-coordinate arrays.
 - Measurement-aware indicator methods always return `AnalysisResult`; standalone array functions remain plain numeric dictionaries for callers managing units themselves.
 - Built-in amplitude and PSD results carry explicit spectrum-kind, normalization, and aggregation metadata. Full versus averaged spectra use `none` versus the appropriate magnitude- or power-density aggregation, and indicator dispatch rejects kind mismatches.
+- Derived signals copy source metadata, while operation-specific spectral metadata overrides conflicting source keys.
 - Paired operations reject unequal coordinate-unit labels as well as unequal lengths, rates, starts, or coordinate values; no unit conversion is implicit.
 - Validate the happy-path envelope-order chain against the configured synthetic fault order while retaining intermediate derived signals.
 - Persistence and plotting are outside this layer and must not appear as hidden side effects.

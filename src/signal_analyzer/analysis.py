@@ -62,7 +62,8 @@ class Analysis:
     """Configured orchestration around standalone numerical functions.
 
     Methods add derived signals and provenance to ``measurement``. Numerical
-    work remains in the public standalone functions imported above.
+    work remains in the public standalone functions imported above. Derived
+    signals copy source metadata; operation-specific fields override conflicts.
     """
 
     def __init__(
@@ -208,6 +209,7 @@ class Analysis:
             value_unit=source.value_unit,
             coordinate_unit=source.coordinate_unit,
             kind=source.kind,
+            metadata=source.metadata,
         )
         return self.measurement.add_derived_signal(
             output_name,
@@ -293,6 +295,13 @@ class Analysis:
         oversample=None,
         position_unit="integrated unit",
     ):
+        """Resample a signal using synchronous speed values.
+
+        The signal sampling rate is samples per coordinate-time unit; speed
+        values must use that same time unit in their denominator. Unit labels
+        are compared for the shared coordinate but are not parsed or converted.
+        The caller supplies the resulting integrated ``position_unit`` label.
+        """
         source = self._require_signal_kind(self._signal(signal_name))
         speed = self._require_signal_kind(self._signal(speed_name))
         fs = self._synchronized(source, speed)
@@ -311,6 +320,7 @@ class Analysis:
             value_unit=source.value_unit,
             coordinate_unit=position_unit,
             kind="signal",
+            metadata=source.metadata,
         )
         return self.measurement.add_derived_signal(
             output_name,
@@ -350,6 +360,7 @@ class Analysis:
             coordinate_unit=_frequency_unit(source.coordinate_unit),
             kind="amplitude_spectrum",
             metadata={
+                **source.metadata,
                 "source_value_unit": source.value_unit,
                 "normalization": "coherent_gain",
                 "aggregation": (
@@ -402,6 +413,7 @@ class Analysis:
             coordinate_unit=frequency_unit,
             kind="psd",
             metadata={
+                **source.metadata,
                 "source_value_unit": source.value_unit,
                 "normalization": "density",
                 "aggregation": (
@@ -542,6 +554,7 @@ class Analysis:
             value_unit=source.value_unit,
             coordinate_unit=source.coordinate_unit,
             kind=source.kind,
+            metadata=source.metadata,
         )
         return self.measurement.add_derived_signal(
             output_name,

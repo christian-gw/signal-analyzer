@@ -6,13 +6,20 @@ from signal_analyzer.measurement import AnalysisResult, Measurement, Signal
 from signal_analyzer.synthetic_signals import simulate_bearing_fault
 
 
-def _tone_measurement():
+def _tone_measurement(metadata=None):
     fs = 1024.0
     t = np.arange(2048) / fs
     x = 2.0 * np.sin(2 * np.pi * 64 * t)
     measurement = Measurement()
     measurement.add_signal(
-        "x", Signal(x, sample_rate=fs, value_unit="g", coordinate_unit="s")
+        "x",
+        Signal(
+            x,
+            sample_rate=fs,
+            value_unit="g",
+            coordinate_unit="s",
+            metadata={} if metadata is None else metadata,
+        ),
     )
     return measurement
 
@@ -69,6 +76,28 @@ def test_analysis_downsample_adds_signal_and_provenance():
     assert result.sample_rate == 256.0
     assert len(result.values) == 512
     assert measurement.provenance[-1].operation == "resample_uniform"
+
+
+def test_analysis_propagates_source_metadata_to_derived_signals():
+    measurement = _tone_measurement(
+        {"sensor": "A", "normalization": "source-value"}
+    )
+    analysis = Analysis(measurement)
+
+    downsampled = analysis.downsample("x", "x_down", down=2)
+    amplitude = analysis.amplitude_spectrum("x", "x_amplitude")
+    psd = analysis.psd("x", "x_psd")
+
+    assert downsampled.metadata == {
+        "sensor": "A",
+        "normalization": "source-value",
+    }
+    assert amplitude.metadata["sensor"] == "A"
+    assert amplitude.metadata["normalization"] == "coherent_gain"
+    assert psd.metadata["sensor"] == "A"
+    assert psd.metadata["normalization"] == "density"
+    downsampled.metadata["sensor"] = "changed"
+    assert measurement.signal("x").metadata["sensor"] == "A"
 
 
 def test_analysis_statistics_can_store_named_results_with_provenance():
@@ -185,7 +214,14 @@ def test_analysis_spatial_resample_recovers_known_order():
     x = np.sin(2 * np.pi * 3 * 8 * t)
     measurement = Measurement()
     measurement.add_signal(
-        "x", Signal(x, sample_rate=fs, value_unit="g", coordinate_unit="s")
+        "x",
+        Signal(
+            x,
+            sample_rate=fs,
+            value_unit="g",
+            coordinate_unit="s",
+            metadata={"sensor": "A"},
+        ),
     )
     measurement.add_signal(
         "speed",
@@ -203,6 +239,7 @@ def test_analysis_spatial_resample_recovers_known_order():
 
     assert peak == pytest.approx(3.0, abs=64 / 512)
     assert spectrum.coordinate_unit == "cycles/rev"
+    assert measurement.signal("x_spatial").metadata == {"sensor": "A"}
 
 
 def test_envelope_order_spectrum_happy_path_recovers_fault_order():
@@ -225,7 +262,13 @@ def test_envelope_order_spectrum_happy_path_recovers_fault_order():
     measurement = Measurement()
     measurement.add_signal(
         "vibration",
-        Signal(x, sample_rate=fs, value_unit="g", coordinate_unit="s"),
+        Signal(
+            x,
+            sample_rate=fs,
+            value_unit="g",
+            coordinate_unit="s",
+            metadata={"sensor": "bearing-A"},
+        ),
     )
     measurement.add_signal(
         "speed",
@@ -251,4 +294,17 @@ def test_envelope_order_spectrum_happy_path_recovers_fault_order():
     assert spectrum.kind == "amplitude_spectrum"
     assert "bearing_envelope" in measurement.signals
     assert "bearing_spatial" in measurement.signals
+    assert (
+        measurement.signal("bearing_envelope").metadata["sensor"]
+        == "bearing-A"
+    )
+    assert (
+        measurement.signal("bearing_envelope_trimmed").metadata["sensor"]
+        == "bearing-A"
+    )
+    assert (
+        measurement.signal("bearing_spatial").metadata["sensor"]
+        == "bearing-A"
+    )
+    assert spectrum.metadata["sensor"] == "bearing-A"
     assert measurement.provenance[-1].operation == "averaged_fft"

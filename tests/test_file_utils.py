@@ -31,3 +31,20 @@ def test_find_files_excludes_matching_directories(tmp_path):
     expected.touch()
 
     assert find_files(tmp_path, "*.csv") == [expected]
+
+
+def test_find_files_breaks_duplicate_filename_ties_by_path(
+    tmp_path, monkeypatch
+):
+    first = tmp_path / "a" / "sample.csv"
+    second = tmp_path / "z" / "sample.csv"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    first.touch()
+    second.touch()
+    discovery_order = [second, first]
+    monkeypatch.setattr(
+        Path, "rglob", lambda self, pattern: iter(discovery_order)
+    )
+
+    assert find_files(tmp_path, "*.csv") == [first, second]

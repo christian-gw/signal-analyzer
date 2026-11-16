@@ -178,10 +178,11 @@ Multiple sources remain an ordinary caller loop: load a DataFrame, convert it, a
 - Signal and result units are nullable strings. Unknown units propagate as `None`; dimensionless metrics use `"1"`. The core does not guess or convert units.
 - `resample_uniform` handles ordinary uniform-grid rational resampling separately from speed-to-position resampling.
 - `align_to_reference` and `Analysis.align_pair` use linear interpolation on the actual coordinate overlap and never extrapolate. They are not substitutes for anti-aliased downsampling.
-- `speed_resample` requires synchronous, strictly positive speed and returns a deterministic half-open position grid.
+- `speed_resample` requires synchronous, strictly positive speed and returns a deterministic half-open position grid. The speed denominator must match the sampling-rate time unit—for example, samples/s with rev/s, not rpm—and the package does not parse or convert unit labels.
 - `speed_resample_aa` provides partial anti-aliasing protection. Its fixed max-speed temporal filter and oversample/polyphase stage do not guarantee alias-free nonuniform reconstruction.
 - The demonstrated working envelope uses a 4:1 speed ratio, default 4× spatial oversampling, and a practical analysis band ending at `resolution / 2.56`.
 - Paired `Analysis` operations require equal coordinate grids, sample rates, and coordinate-unit labels. They do not align or convert channels implicitly.
+- `Signal` copies its input arrays and stores them read-only. Derived signals copy source metadata; operation-specific metadata such as spectral normalization takes precedence.
 - Hilbert demodulation retains amplitude units; square-law demodulation returns squared units. Both use zero-phase filters with endpoint transients.
 - `simulate_bearing_fault` is a qualitative workflow signal, not a calibrated mechanical model.
 

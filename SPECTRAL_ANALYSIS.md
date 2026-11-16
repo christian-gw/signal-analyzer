@@ -209,7 +209,7 @@ These are useful distinctions even though the toolkit does not yet expose dedica
 - **Amplitude spectral density (ASD)** is `sqrt(PSD)`, with units such as `unit/sqrt(Hz)`. Square it before integrating; ASD values themselves do not add as power.
 - **Energy spectral density** describes the frequency distribution of a finite-energy signal. It is related to `|X(f)|²` with transform-dependent scaling, rather than the long-term average-power interpretation of PSD.
 - **Cross spectral density** retains shared frequency-dependent phase and power between two signals. **Coherence** normalizes it to show the strength of their linear frequency-domain relationship.
-- A **spectrogram** or short-time Fourier transform keeps block position as well as frequency. The per-block arrays returned by `averaged_fft(..., return_spectrogram=True)` and `averaged_psd(..., return_spectrogram=True)` provide the underlying blockwise views, but no plotting abstraction is imposed.
+- A **spectrogram** or short-time Fourier transform keeps block position as well as frequency. The per-block arrays returned by `averaged_fft(..., return_spectrogram=True)` and `averaged_psd(..., return_spectrogram=True)` provide the underlying blockwise views, but no plotting abstraction is imposed. Their block centers are relative to the first supplied sample, treated as coordinate zero, and use the midpoint of the first and last block samples. Add a nonzero absolute time or position origin in caller code.
 
 ## 9. Practical selection guide
 

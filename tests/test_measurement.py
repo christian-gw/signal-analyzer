@@ -19,6 +19,23 @@ def test_uniform_signal_generates_coordinates_and_rate():
     assert signal.inferred_sample_rate() == 2.0
 
 
+def test_signal_copies_and_freezes_owned_arrays():
+    values = np.array([1.0, 2.0, 3.0])
+    coordinate = np.array([0.0, 0.5, 1.0])
+    signal = Signal(values, coordinate=coordinate)
+
+    values[0] = 99.0
+    coordinate[0] = -1.0
+    np.testing.assert_array_equal(signal.values, [1.0, 2.0, 3.0])
+    np.testing.assert_array_equal(signal.coordinate, [0.0, 0.5, 1.0])
+    assert not signal.values.flags.writeable
+    assert not signal.coordinate.flags.writeable
+    with pytest.raises(ValueError, match="read-only"):
+        signal.values[0] = 7.0
+    with pytest.raises(ValueError, match="read-only"):
+        signal.coordinate[0] = 7.0
+
+
 def test_explicit_uniform_and_nonuniform_coordinate_rate_inference():
     uniform = Signal(np.ones(3), coordinate=np.array([0.0, 0.25, 0.5]))
     nonuniform = Signal(np.ones(3), coordinate=np.array([0.0, 0.2, 0.5]))
@@ -104,6 +121,26 @@ def test_derived_signal_requires_known_inputs():
         measurement.add_derived_signal(
             "y", Signal(np.ones(2), sample_rate=1.0), "copy", ("x",)
         )
+
+
+def test_invalid_derived_records_do_not_register_artifacts():
+    measurement = Measurement()
+    measurement.add_signal("x", Signal(np.ones(2), sample_rate=1.0))
+    derived_signal = Signal(np.ones(2), sample_rate=1.0)
+    derived_result = AnalysisResult("statistics", {"rms": 1.0}, {"rms": None})
+
+    with pytest.raises(ValueError, match="operation"):
+        measurement.add_derived_signal(
+            "bad_signal", derived_signal, "", ("x",)
+        )
+    with pytest.raises(ValueError, match="operation"):
+        measurement.add_derived_result(
+            "bad_result", derived_result, "", ("x",)
+        )
+
+    assert "bad_signal" not in measurement.signals
+    assert "bad_result" not in measurement.results
+    assert measurement.provenance == []
 
 
 def test_analysis_result_validates_and_copies_values_units_and_metadata():

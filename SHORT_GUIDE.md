@@ -45,6 +45,9 @@ not converted or inferred. Access `signal.values`, `signal.coordinates`,
 share one namespace. Source/file/job identity belongs in caller metadata, not in
 a required measurement ID.
 
+`Signal` copies input arrays and stores them read-only. Analysis-derived signals
+copy source metadata, with operation-specific fields taking precedence.
+
 Analysis operations store derived signals. Indicator methods return an
 `AnalysisResult`; pass `output_name=` only when it should also be stored with
 provenance. Read it with `result.values["rms"]` and
@@ -143,6 +146,9 @@ handling. Synthetic helpers live in `signal_analyzer.synthetic_signals`:
   unit.
 - Speed must be finite and strictly positive. Stationary or reversing sections
   must be segmented or rejected, never silently clamped.
+- The speed denominator must match the sampling-rate time unit: samples/s pairs
+  with rev/s or m/s, while rpm must first be converted. Units are labels only;
+  the package performs no unit conversion.
 - Spatial resampling combines a fixed max-speed temporal filter, interpolation,
   and polyphase decimation. It is a partial anti-alias safeguard, not a rigorous
   guarantee. `resolution` is samples per integrated speed unit. Nyquist is
