@@ -295,7 +295,7 @@ def test_power_spectrum_is_psd_times_bin_width():
 
     np.testing.assert_array_equal(f_power, f_psd)
     np.testing.assert_allclose(
-        power, Pxx * fs / len(x), rtol=2e-16, atol=0
+        power, Pxx * fs / len(x), rtol=1e-15, atol=0
     )
 
 

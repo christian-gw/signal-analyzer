@@ -127,15 +127,18 @@ def amplitude_band_statistics(
     )
 
     peak_index = int(np.argmax(selected_amplitude))
+    magnitude_integral = np.sum(
+        (selected_amplitude[:-1] + selected_amplitude[1:])
+        * np.diff(selected_coordinate)
+        / 2
+    )
     return {
         "count": int(selected_amplitude.size),
         "peak_coordinate": float(selected_coordinate[peak_index]),
         "peak_amplitude": float(selected_amplitude[peak_index]),
         "mean_amplitude": float(np.mean(selected_amplitude)),
         "median_amplitude": float(np.median(selected_amplitude)),
-        "magnitude_integral": float(
-            np.trapz(selected_amplitude, selected_coordinate)
-        ),
+        "magnitude_integral": float(magnitude_integral),
     }
 
 

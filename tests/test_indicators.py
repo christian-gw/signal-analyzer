@@ -124,6 +124,14 @@ def test_amplitude_band_statistics_uses_magnitude_semantics():
     assert "power" not in result
 
 
+def test_amplitude_band_statistics_single_bin_integral_is_zero():
+    result = amplitude_band_statistics(
+        np.array([2.0]), np.array([3.0])
+    )
+
+    assert result["magnitude_integral"] == 0.0
+
+
 @pytest.mark.parametrize(
     ("coordinate", "amplitude", "kwargs", "message"),
     [

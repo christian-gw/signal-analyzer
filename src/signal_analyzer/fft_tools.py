@@ -39,7 +39,7 @@ def fft_spectrum(x, fs=1.0, window="hann", one_sided=True,
     >>> t = np.arange(1000) / 1000
     >>> x = 2 * np.sin(2 * np.pi * 50 * t)
     >>> f, Xf = fft_spectrum(x, **{"fs": 1000, "window": "hann"})
-    >>> round(abs(Xf[np.argmax(abs(Xf))]), 4)
+    >>> round(float(abs(Xf[np.argmax(abs(Xf))])), 4)
     2.0
 
     Notes
