@@ -16,6 +16,8 @@
 - Explicit overlap-only linear alignment for separately sampled channels, without implicit extrapolation or decimation.
 - File-agnostic pandas DataFrame adapter for simple shared-grid measurements.
 - Pip-installable `src/signal_analyzer` package with source identity and multi-source orchestration kept outside the core.
+- Single-source installed version metadata, CI coverage for declared runtime
+  dependency floors, and clean wheel/source-distribution smoke validation.
 - Output-free, executable signal-analysis notebook covering the standalone numerical APIs and reciprocal wavelength interpretation.
 - Output-free, executable measurement-handling notebook covering independent grids, provenance, derived signals, and the configured happy path.
 

@@ -28,6 +28,13 @@ dependencies:
 python -m pip install -e ".[test,examples]"
 ```
 
+When developing a separate application beside this checkout, create the
+application's virtual environment and install the core with
+`python -m pip install -e "../signal_analyzer"`. CI and deployed applications
+should install a versioned wheel instead of an editable checkout. See
+[PACKAGING.md](PACKAGING.md) for the complete development and artifact
+validation workflow.
+
 The package requires Python 3.10 or newer. See [PACKAGING.md](PACKAGING.md) for
 the source layout, regular and editable installation, and wheel-validation
 workflow.

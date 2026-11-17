@@ -1,8 +1,62 @@
+# Python bytecode and native extensions
 __pycache__/
 *.py[cod]
-.pytest_cache/
-.ipynb_checkpoints/
+*$py.class
+*.pyd
+*.so
+
+# Packaging and build products
 build/
 dist/
 *.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# Virtual environments and local Python selection
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Test, coverage, type-checker, and linter caches
+.pytest_cache/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyright/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local environment and secrets; keep a documented template if one is added
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system debris
+.idea/
+.history/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs, temporary outputs, and local handoff material
+*.log
+*.tmp
+*.bak
 .tmp_*/
+handoff/

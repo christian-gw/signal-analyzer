@@ -24,9 +24,9 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy",
-    "scipy",
-    "pandas",
+    "numpy>=1.23.5",
+    "scipy>=1.10.1",
+    "pandas>=1.5.3",
 ]
 
 [project.optional-dependencies]
